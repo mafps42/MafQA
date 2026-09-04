@@ -414,6 +414,21 @@
     text-decoration:underline;
   }
 
+  .resume-box{
+    margin-top:18px;
+    border:1px solid var(--gold);
+    background:#FBF3DE;
+    border-radius:6px;
+    padding:14px 16px;
+    text-align:center;
+  }
+  [data-theme="dark"] .resume-box{ background:#2A2213; }
+  .resume-box .resume-text{
+    font-size:13px;
+    color:var(--teal-deep);
+    margin-bottom:10px;
+  }
+
   /* Quiz screen */
   .quiz-top{
     display:flex;
@@ -422,6 +437,12 @@
     margin-bottom:14px;
     font-size:13px;
     color:#7a7161;
+    gap:8px;
+  }
+  .quiz-top .back-link{
+    margin:0;
+    font-size:12.5px;
+    flex-shrink:0;
   }
   .quiz-top .badge{
     background:var(--teal);
@@ -708,6 +729,7 @@
         </button>
       </div>
       <div class="stat-line">أسئلة هذه المادة: <strong id="total-count">0</strong> سؤال</div>
+      <div id="resume-box" class="resume-box" style="display:none;"></div>
       <button class="review-btn" id="review-btn" style="display:none;" onclick="startReviewMistakes()">
         مراجعة أخطائي السابقة (<span id="review-count">0</span>)
       </button>
@@ -759,6 +781,7 @@
   <div class="screen" id="screen-quiz">
     <div class="card">
       <div class="quiz-top">
+        <a class="back-link" id="quiz-exit-link" onclick="exitQuiz()" style="margin:0;">‹ خروج</a>
         <span id="quiz-mode-label"></span>
         <span style="display:flex; gap:8px; align-items:center;">
           <span class="timer-badge" id="timer-badge" style="display:none;"></span>
@@ -807,6 +830,7 @@ let selectedChapters = new Set();
 
 function historyKey(){ return 'combined_' + currentSubject + '_history_v1'; }
 function mistakesKey(){ return 'combined_' + currentSubject + '_mistakes_v1'; }
+function progressKey(){ return 'combined_' + currentSubject + '_inprogress_v1'; }
 const THEME_KEY = 'combined_quiz_theme_v1';
 
 /* Timer state */
@@ -1019,6 +1043,27 @@ function goHome(){
     QUESTIONS.filter(q => q.subject === currentSubject).length;
   renderHistory();
   renderReviewButton();
+  renderResumeBanner();
+}
+
+function renderResumeBanner(){
+  const box = document.getElementById('resume-box');
+  const saved = loadProgress();
+  if(!saved || !saved.quizQuestions || !saved.quizQuestions.length){
+    box.style.display = 'none';
+    box.innerHTML = '';
+    return;
+  }
+  const total = saved.quizQuestions.length;
+  const done = saved.currentIndex + (saved.userAnswers ? 0 : 0);
+  const answeredCount = saved.userAnswers ? saved.userAnswers.length : 0;
+  box.style.display = 'block';
+  box.innerHTML =
+    '<div class="resume-text">لديك اختبار غير مكتمل (' + answeredCount + ' من ' + total + ' سؤالاً) — هل تريد إكماله؟</div>' +
+    '<div class="resume-actions">' +
+      '<button class="primary-btn" style="margin-top:0;" onclick="resumeQuiz()">استئناف الاختبار</button>' +
+      '<button class="ghost-btn" style="margin-top:8px;" onclick="discardProgress()">بدء من جديد (حذف)</button>' +
+    '</div>';
 }
 
 function goSetup(m){
@@ -1059,7 +1104,60 @@ function startQuiz(){
     mode === 'immediate' ? 'وضع التصحيح الفوري' : 'وضع الاختبار العشوائي';
   document.getElementById('timer-badge').style.display = timerEnabled ? 'inline-block' : 'none';
   showScreen('screen-quiz');
+  saveProgress();
   renderQuestion();
+}
+
+/* ===================== In-progress save/resume ===================== */
+function saveProgress(){
+  if(!currentSubject || !quizQuestions.length) return;
+  try{
+    const state = {
+      mode, quizQuestions, currentIndex, score, userAnswers,
+      timerEnabled, timerSeconds,
+      savedAt: new Date().toISOString()
+    };
+    localStorage.setItem(progressKey(), JSON.stringify(state));
+  } catch(e){ /* ignore */ }
+}
+
+function loadProgress(){
+  try{
+    const raw = localStorage.getItem(progressKey());
+    return raw ? JSON.parse(raw) : null;
+  } catch(e){ return null; }
+}
+
+function clearProgress(){
+  try{ localStorage.removeItem(progressKey()); } catch(e){}
+}
+
+function resumeQuiz(){
+  const saved = loadProgress();
+  if(!saved) return;
+  mode = saved.mode;
+  quizQuestions = saved.quizQuestions;
+  currentIndex = saved.currentIndex;
+  score = saved.score;
+  userAnswers = saved.userAnswers;
+  timerEnabled = saved.timerEnabled;
+  timerSeconds = saved.timerSeconds;
+  document.getElementById('quiz-mode-label').textContent =
+    mode === 'immediate' ? 'وضع التصحيح الفوري' : 'وضع الاختبار العشوائي';
+  document.getElementById('timer-badge').style.display = timerEnabled ? 'inline-block' : 'none';
+  showScreen('screen-quiz');
+  renderQuestion();
+}
+
+function discardProgress(){
+  clearProgress();
+  goHome();
+}
+
+function exitQuiz(){
+  clearTimer();
+  saveProgress();
+  goHome();
 }
 
 /* ===================== History (localStorage) ===================== */
@@ -1205,6 +1303,7 @@ function selectAnswer(i, el){
   document.getElementById('next-btn').classList.add('show');
   document.getElementById('progress-fill').style.width =
     ((currentIndex+1) / quizQuestions.length * 100) + '%';
+  saveProgress();
 }
 
 function nextQuestion(){
@@ -1212,6 +1311,7 @@ function nextQuestion(){
   if(currentIndex < quizQuestions.length - 1){
     currentIndex++;
     renderQuestion();
+    saveProgress();
   } else {
     showResults();
   }
@@ -1220,6 +1320,7 @@ function nextQuestion(){
 /* ===================== Results ===================== */
 function showResults(){
   clearTimer();
+  clearProgress();
   showScreen('screen-results');
   const total = quizQuestions.length;
   document.getElementById('score-big').textContent = score + ' / ' + total;
