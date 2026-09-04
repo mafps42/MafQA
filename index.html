@@ -1,0 +1,1280 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>منصة الاختبارات الإسلامية</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F7F1E1;
+    --ink:#1F2E29;
+    --teal:#0F3D3E;
+    --teal-deep:#0A2C2D;
+    --gold:#B8892B;
+    --gold-light:#D9B15C;
+    --green:#3D6B4F;
+    --red:#A23B3B;
+    --line:#D8CBA6;
+    --card:#FFFCF4;
+  }
+  [data-theme="dark"]{
+    --paper:#141A17;
+    --ink:#EDE6D6;
+    --teal:#7FBFA0;
+    --teal-deep:#D9B15C;
+    --gold:#D9B15C;
+    --gold-light:#E8CB86;
+    --green:#7FBFA0;
+    --red:#E08787;
+    --line:#33403A;
+    --card:#1B231F;
+  }
+  [data-theme="dark"] body{
+    background-image:
+      radial-gradient(circle at 15% 8%, rgba(217,177,92,0.06), transparent 40%),
+      radial-gradient(circle at 90% 92%, rgba(127,191,160,0.07), transparent 45%);
+  }
+  [data-theme="dark"] .opt{ background:#1F2823; color:var(--ink); }
+  [data-theme="dark"] .opt:hover{ background:#26312A; }
+  [data-theme="dark"] .opt.correct{ background:#1E3327; }
+  [data-theme="dark"] .opt.wrong{ background:#3A2323; }
+  [data-theme="dark"] .custom-num input{ background:#1F2823; color:var(--ink); }
+  [data-theme="dark"] .chapter-list{ background:#1F2823; }
+  [data-theme="dark"] .chapter-item:hover{ background:#26312A; }
+  [data-theme="dark"] .subject-card{ background:#1F2823; }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper);
+    background-image:
+      radial-gradient(circle at 15% 8%, rgba(184,137,43,0.10), transparent 40%),
+      radial-gradient(circle at 90% 92%, rgba(15,61,62,0.10), transparent 45%);
+    color:var(--ink);
+    font-family:'Cairo', sans-serif;
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    padding:28px 16px 60px;
+  }
+  .brand{
+    text-align:center;
+    margin-bottom:28px;
+  }
+  .brand .kicker{
+    font-family:'Amiri', serif;
+    font-size:15px;
+    color:var(--gold);
+    letter-spacing:0.5px;
+    margin-bottom:6px;
+  }
+  .brand h1{
+    font-family:'Amiri', serif;
+    font-weight:700;
+    font-size:clamp(28px,6vw,42px);
+    color:var(--teal-deep);
+    margin:0 0 6px;
+  }
+  .brand .sub{
+    font-size:14px;
+    color:#6b6255;
+  }
+  .frame{
+    width:100%;
+    max-width:640px;
+  }
+  /* Ornamental divider */
+  .divider{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin:18px 0 26px;
+    color:var(--gold);
+  }
+  .divider::before,.divider::after{
+    content:"";
+    flex:1;
+    height:1px;
+    background:linear-gradient(to var(--dir,left), transparent, var(--line) 30%, var(--line) 70%, transparent);
+  }
+  .divider span{ font-size:18px; }
+
+  /* Screens */
+  .screen{ display:none; }
+  .screen.active{ display:block; }
+
+  .card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:6px;
+    padding:28px 24px;
+    box-shadow:0 1px 3px rgba(15,61,62,0.06), 0 8px 24px rgba(15,61,62,0.06);
+    position:relative;
+  }
+  .card::before{
+    content:"";
+    position:absolute;
+    inset:6px;
+    border:1px solid rgba(184,137,43,0.25);
+    border-radius:3px;
+    pointer-events:none;
+  }
+
+  /* Mode selection */
+  .mode-title{
+    font-family:'Amiri', serif;
+    font-size:20px;
+    color:var(--teal-deep);
+    margin:0 0 18px;
+    text-align:center;
+  }
+  .mode-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:16px;
+  }
+  .subject-grid{
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+  }
+  .subject-card{
+    display:flex;
+    align-items:center;
+    gap:14px;
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:8px;
+    padding:16px;
+    cursor:pointer;
+    text-align:right;
+    transition:all 0.15s ease;
+  }
+  .subject-card:hover{
+    border-color:var(--gold);
+    transform:translateY(-2px);
+    box-shadow:0 4px 12px rgba(15,61,62,0.08);
+  }
+  .subject-card .subj-num{
+    font-family:'Amiri', serif;
+    font-size:24px;
+    color:var(--gold);
+    width:34px;
+    flex-shrink:0;
+    text-align:center;
+  }
+  .subject-card .subj-text{ flex:1; }
+  .subject-card .subj-name{
+    font-weight:700;
+    font-size:15.5px;
+    color:var(--teal-deep);
+    margin-bottom:3px;
+  }
+  .subject-card .subj-sub{
+    font-size:12.5px;
+    color:#8a806f;
+    margin-bottom:4px;
+  }
+  .subject-card .subj-count{
+    font-size:11.5px;
+    color:var(--gold);
+    font-weight:600;
+  }
+  @media (max-width:520px){
+    .mode-grid{ grid-template-columns:1fr; }
+  }
+  .mode-btn{
+    background:var(--teal);
+    color:var(--paper);
+    border:none;
+    border-radius:5px;
+    padding:22px 16px;
+    cursor:pointer;
+    text-align:right;
+    font-family:'Cairo', sans-serif;
+    transition:transform 0.15s ease, background 0.15s ease;
+  }
+  .mode-btn:hover{ background:var(--teal-deep); transform:translateY(-2px); }
+  .mode-btn .num{
+    font-family:'Amiri', serif;
+    font-size:26px;
+    color:var(--gold-light);
+    display:block;
+    margin-bottom:8px;
+  }
+  .mode-btn .name{
+    font-weight:700;
+    font-size:17px;
+    display:block;
+    margin-bottom:6px;
+  }
+  .mode-btn .desc{
+    font-size:12.5px;
+    opacity:0.85;
+    line-height:1.6;
+    display:block;
+  }
+
+  .stat-line{
+    text-align:center;
+    color:#7a7161;
+    font-size:13px;
+    margin-top:20px;
+  }
+
+  /* Setup screen (mode 2 config) */
+  .setup-row{ margin-bottom:20px; }
+  .setup-row label{
+    display:block;
+    font-weight:600;
+    margin-bottom:10px;
+    color:var(--teal-deep);
+    font-size:14.5px;
+  }
+  .chip-row{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+  }
+  .chip{
+    border:1px solid var(--line);
+    background:transparent;
+    color:var(--ink);
+    padding:8px 16px;
+    border-radius:20px;
+    cursor:pointer;
+    font-family:'Cairo', sans-serif;
+    font-size:13.5px;
+    transition:all 0.15s ease;
+  }
+  .chip.selected{
+    background:var(--gold);
+    border-color:var(--gold);
+    color:#fff;
+  }
+  .custom-num{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-top:10px;
+  }
+  .custom-num input{
+    width:90px;
+    padding:8px 10px;
+    border:1px solid var(--line);
+    border-radius:5px;
+    font-family:'Cairo', sans-serif;
+    font-size:14px;
+    text-align:center;
+  }
+  .primary-btn{
+    width:100%;
+    background:var(--teal);
+    color:#fff;
+    border:none;
+    border-radius:5px;
+    padding:14px;
+    font-family:'Cairo', sans-serif;
+    font-weight:700;
+    font-size:15px;
+    cursor:pointer;
+    margin-top:6px;
+    transition:background 0.15s ease;
+  }
+  .primary-btn:hover{ background:var(--teal-deep); }
+  .ghost-btn{
+    width:100%;
+    background:transparent;
+    color:var(--teal);
+    border:1px solid var(--teal);
+    border-radius:5px;
+    padding:12px;
+    font-family:'Cairo', sans-serif;
+    font-weight:600;
+    font-size:14px;
+    cursor:pointer;
+    margin-top:10px;
+  }
+  .back-link{
+    display:inline-block;
+    margin-bottom:14px;
+    color:#8a806f;
+    font-size:13px;
+    cursor:pointer;
+    text-decoration:none;
+  }
+  .back-link:hover{ color:var(--teal); }
+
+  /* Chapter checklist */
+  .chapter-actions{
+    display:flex;
+    gap:8px;
+    align-items:center;
+    margin-bottom:10px;
+    font-size:12.5px;
+    color:#9a8f7a;
+  }
+  .link-btn{
+    background:none;
+    border:none;
+    color:var(--teal);
+    cursor:pointer;
+    font-family:'Cairo', sans-serif;
+    font-size:12.5px;
+    padding:0;
+    text-decoration:underline;
+  }
+  .chapter-list{
+    max-height:220px;
+    overflow-y:auto;
+    border:1px solid var(--line);
+    border-radius:6px;
+    padding:6px;
+    background:#fff;
+  }
+  .chapter-item{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:8px 10px;
+    border-radius:4px;
+    cursor:pointer;
+    font-size:13.5px;
+  }
+  .chapter-item:hover{ background:#FBF6E9; }
+  .chapter-item input{
+    accent-color:var(--gold);
+    width:16px;
+    height:16px;
+    flex-shrink:0;
+  }
+  .chapter-item .cnt{
+    margin-inline-start:auto;
+    color:#a89c86;
+    font-size:12px;
+  }
+
+  /* History box on home */
+  .history-box{
+    margin-top:22px;
+    border-top:1px dashed var(--line);
+    padding-top:16px;
+  }
+  .history-box h4{
+    font-family:'Amiri', serif;
+    font-size:15px;
+    color:var(--teal-deep);
+    margin:0 0 10px;
+    text-align:center;
+  }
+  .history-stats{
+    display:flex;
+    justify-content:center;
+    gap:22px;
+    text-align:center;
+    margin-bottom:12px;
+  }
+  .history-stats .hstat b{
+    display:block;
+    font-family:'Amiri', serif;
+    font-size:20px;
+    color:var(--gold);
+  }
+  .history-stats .hstat span{
+    font-size:11.5px;
+    color:#8a806f;
+  }
+  .history-list{
+    max-height:150px;
+    overflow-y:auto;
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+  }
+  .history-row{
+    display:flex;
+    justify-content:space-between;
+    font-size:12px;
+    color:#6b6255;
+    border-bottom:1px dotted var(--line);
+    padding-bottom:5px;
+  }
+  .history-row .h-pct{ font-weight:700; }
+  .clear-history{
+    display:block;
+    margin:12px auto 0;
+    background:none;
+    border:none;
+    color:#b08a8a;
+    font-size:11.5px;
+    cursor:pointer;
+    text-decoration:underline;
+  }
+
+  /* Quiz screen */
+  .quiz-top{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:14px;
+    font-size:13px;
+    color:#7a7161;
+  }
+  .quiz-top .badge{
+    background:var(--teal);
+    color:var(--paper);
+    padding:4px 12px;
+    border-radius:20px;
+    font-size:12.5px;
+  }
+  .progress-bar{
+    height:5px;
+    background:var(--line);
+    border-radius:3px;
+    overflow:hidden;
+    margin-bottom:22px;
+  }
+  .progress-fill{
+    height:100%;
+    background:var(--gold);
+    width:0%;
+    transition:width 0.3s ease;
+  }
+  .q-text{
+    font-family:'Amiri', serif;
+    font-size:19px;
+    line-height:1.7;
+    color:var(--teal-deep);
+    margin:0 0 22px;
+  }
+  .options{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
+  .opt{
+    display:flex;
+    align-items:flex-start;
+    gap:12px;
+    border:1px solid var(--line);
+    background:#fff;
+    padding:13px 16px;
+    border-radius:5px;
+    cursor:pointer;
+    font-family:'Cairo', sans-serif;
+    font-size:14.5px;
+    line-height:1.6;
+    text-align:right;
+    transition:all 0.12s ease;
+  }
+  .opt:hover{ border-color:var(--gold); background:#FFFCF0; }
+  .opt .letter{
+    flex-shrink:0;
+    width:26px;
+    height:26px;
+    border-radius:50%;
+    border:1px solid var(--line);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:13px;
+    font-weight:700;
+    color:var(--teal);
+  }
+  .opt.correct{
+    background:#EAF3EC;
+    border-color:var(--green);
+  }
+  .opt.correct .letter{ background:var(--green); border-color:var(--green); color:#fff; }
+  .opt.wrong{
+    background:#F7EAEA;
+    border-color:var(--red);
+  }
+  .opt.wrong .letter{ background:var(--red); border-color:var(--red); color:#fff; }
+  .opt.disabled{ cursor:default; }
+  .opt.dimmed{ opacity:0.55; }
+
+  .feedback{
+    margin-top:16px;
+    padding:12px 16px;
+    border-radius:5px;
+    font-size:14px;
+    display:none;
+  }
+  .feedback.show{ display:block; }
+  .feedback.ok{ background:#EAF3EC; color:var(--green); border:1px solid var(--green); }
+  .feedback.no{ background:#F7EAEA; color:var(--red); border:1px solid var(--red); }
+
+  .nav-row{
+    margin-top:22px;
+    display:flex;
+    justify-content:flex-end;
+  }
+  .next-btn{
+    background:var(--gold);
+    color:#fff;
+    border:none;
+    padding:11px 26px;
+    border-radius:5px;
+    font-family:'Cairo', sans-serif;
+    font-weight:700;
+    font-size:14px;
+    cursor:pointer;
+    opacity:0;
+    pointer-events:none;
+    transition:opacity 0.2s ease;
+  }
+  .next-btn.show{ opacity:1; pointer-events:auto; }
+  .next-btn:hover{ background:#a17a26; }
+
+  /* Results */
+  .result-score{
+    text-align:center;
+    padding:20px 0 10px;
+  }
+  .result-score .big{
+    font-family:'Amiri', serif;
+    font-size:56px;
+    color:var(--teal-deep);
+    font-weight:700;
+    line-height:1;
+  }
+  .result-score .of{
+    font-size:15px;
+    color:#7a7161;
+    margin-top:6px;
+  }
+  .result-score .pct{
+    display:inline-block;
+    margin-top:14px;
+    padding:6px 18px;
+    border-radius:20px;
+    font-size:14px;
+    font-weight:700;
+  }
+  .review-list{
+    margin-top:26px;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    max-height:400px;
+    overflow-y:auto;
+    padding-left:4px;
+  }
+  .review-item{
+    border:1px solid var(--line);
+    border-radius:5px;
+    padding:12px 14px;
+    font-size:13.5px;
+  }
+  .review-item .rq{
+    color:var(--teal-deep);
+    font-weight:600;
+    margin-bottom:6px;
+    line-height:1.5;
+  }
+  .review-item .ra{
+    font-size:12.5px;
+    line-height:1.7;
+  }
+  .review-item.ok{ border-inline-start:4px solid var(--green); }
+  .review-item.no{ border-inline-start:4px solid var(--red); }
+  .tag-ok{ color:var(--green); font-weight:700; }
+  .tag-no{ color:var(--red); font-weight:700; }
+
+  footer{
+    margin-top:36px;
+    text-align:center;
+    color:#a89c86;
+    font-size:12px;
+  }
+
+  .theme-toggle{
+    position:fixed;
+    top:16px;
+    left:16px;
+    background:var(--card);
+    border:1px solid var(--line);
+    color:var(--teal);
+    width:38px;
+    height:38px;
+    border-radius:50%;
+    cursor:pointer;
+    font-size:16px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    z-index:50;
+  }
+
+  .timer-row{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-top:10px;
+  }
+  .timer-row input[type=checkbox]{
+    accent-color:var(--gold);
+    width:16px;
+    height:16px;
+  }
+  .timer-row input[type=number]{
+    width:70px;
+    padding:6px 8px;
+    border:1px solid var(--line);
+    border-radius:5px;
+    text-align:center;
+    font-family:'Cairo', sans-serif;
+  }
+  .timer-badge{
+    font-variant-numeric:tabular-nums;
+    background:var(--teal);
+    color:var(--paper);
+    padding:4px 10px;
+    border-radius:20px;
+    font-size:12.5px;
+    min-width:44px;
+    text-align:center;
+  }
+  .timer-badge.low{ background:var(--red); }
+
+  .review-btn{
+    width:100%;
+    background:transparent;
+    color:var(--red);
+    border:1px solid var(--red);
+    border-radius:5px;
+    padding:11px;
+    font-family:'Cairo', sans-serif;
+    font-weight:600;
+    font-size:13.5px;
+    cursor:pointer;
+    margin-top:14px;
+  }
+
+  .share-btn{
+    width:100%;
+    background:var(--gold);
+    color:#fff;
+    border:none;
+    border-radius:5px;
+    padding:12px;
+    font-family:'Cairo', sans-serif;
+    font-weight:700;
+    font-size:14px;
+    cursor:pointer;
+    margin-top:14px;
+  }
+</style>
+</head>
+<body>
+
+<button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()" title="تبديل الوضع الليلي">🌙</button>
+
+<div class="brand">
+  <div class="kicker">✺ منصة الاختبارات الإسلامية ✺</div>
+  <h1 id="brand-title">اختر المادة</h1>
+  <div class="sub" id="brand-sub">خمس مواد شاملة — أكثر من 2300 سؤال اختيار من متعدد</div>
+</div>
+
+<div class="frame">
+
+  <!-- SCREEN 0: Subject selection -->
+  <div class="screen active" id="screen-subjects">
+    <div class="card">
+      <div class="mode-title">اختر المادة التي تريد اختبار نفسك فيها</div>
+      <div id="subject-grid" class="subject-grid"></div>
+    </div>
+  </div>
+
+  <!-- SCREEN 1: Mode selection -->
+  <div class="screen" id="screen-home">
+    <a class="back-link" onclick="goSubjects()">‹ تبديل المادة</a>
+    <div class="card">
+      <div class="mode-title" id="subject-heading">اختر طريقة الاختبار</div>
+      <div class="mode-grid">
+        <button class="mode-btn" onclick="goSetup('immediate')">
+          <span class="num">١</span>
+          <span class="name">تصحيح فوري</span>
+          <span class="desc">تظهر لك النتيجة صح أو خطأ مباشرة بعد كل إجابة، ثم تنتقل للسؤال التالي.</span>
+        </button>
+        <button class="mode-btn" onclick="goSetup('random')">
+          <span class="num">٢</span>
+          <span class="name">اختبار عشوائي</span>
+          <span class="desc">اختر عدد الأسئلة، وتُسحب عشوائيًا من الفصول التي تختارها، وتظهر النتيجة في النهاية فقط.</span>
+        </button>
+      </div>
+      <div class="stat-line">أسئلة هذه المادة: <strong id="total-count">0</strong> سؤال</div>
+      <button class="review-btn" id="review-btn" style="display:none;" onclick="startReviewMistakes()">
+        مراجعة أخطائي السابقة (<span id="review-count">0</span>)
+      </button>
+      <div id="history-box" class="history-box" style="display:none;"></div>
+    </div>
+  </div>
+
+  <!-- SCREEN 2: Setup (chapters + count for random / chapters only for immediate) -->
+  <div class="screen" id="screen-setup">
+    <a class="back-link" onclick="goHome()">‹ رجوع</a>
+    <div class="card">
+      <div class="mode-title" id="setup-title">إعداد الاختبار</div>
+
+      <div class="setup-row" id="count-row">
+        <label>عدد الأسئلة</label>
+        <div class="chip-row" id="chip-row"></div>
+        <div class="custom-num">
+          <span style="font-size:13px;color:#7a7161;">أو أدخل عددًا مخصصًا:</span>
+          <input type="number" id="custom-count" min="1" placeholder="مثال: 25">
+        </div>
+      </div>
+
+      <div class="setup-row">
+        <label>الفصول (اختر واحدًا أو أكثر)</label>
+        <div class="chapter-actions">
+          <button type="button" class="link-btn" onclick="selectAllChapters(true)">تحديد الكل</button>
+          <span>·</span>
+          <button type="button" class="link-btn" onclick="selectAllChapters(false)">إلغاء التحديد</button>
+        </div>
+        <div class="chapter-list" id="chapter-list"></div>
+      </div>
+
+      <div class="stat-line" id="filtered-count" style="margin:0 0 14px;"></div>
+
+      <div class="setup-row">
+        <div class="timer-row">
+          <input type="checkbox" id="timer-toggle">
+          <label for="timer-toggle" style="margin:0;font-weight:600;font-size:14px;">تفعيل مؤقت لكل سؤال</label>
+          <input type="number" id="timer-seconds" value="30" min="5" max="300">
+          <span style="font-size:12.5px;color:#7a7161;">ثانية</span>
+        </div>
+      </div>
+
+      <button class="primary-btn" onclick="confirmSetup()">ابدأ الاختبار</button>
+    </div>
+  </div>
+
+  <!-- SCREEN 3: Quiz -->
+  <div class="screen" id="screen-quiz">
+    <div class="card">
+      <div class="quiz-top">
+        <span id="quiz-mode-label"></span>
+        <span style="display:flex; gap:8px; align-items:center;">
+          <span class="timer-badge" id="timer-badge" style="display:none;"></span>
+          <span class="badge" id="quiz-counter">1 / 10</span>
+        </span>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+      <div class="q-text" id="q-text"></div>
+      <div class="options" id="options"></div>
+      <div class="feedback" id="feedback"></div>
+      <div class="nav-row">
+        <button class="next-btn" id="next-btn" onclick="nextQuestion()">السؤال التالي ‹</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCREEN 4: Results -->
+  <div class="screen" id="screen-results">
+    <div class="card">
+      <div class="result-score">
+        <div class="big" id="score-big">0 / 0</div>
+        <div class="of">عدد الإجابات الصحيحة</div>
+        <div class="pct" id="score-pct">0%</div>
+      </div>
+      <div id="review-container" class="review-list"></div>
+      <button class="share-btn" onclick="shareResult()">مشاركة النتيجة</button>
+      <button class="ghost-btn" onclick="goHome()">العودة للقائمة الرئيسية</button>
+    </div>
+  </div>
+
+</div>
+
+<footer>منصة الاختبارات الإسلامية — خمس مواد شاملة</footer>
+
+<script src="questions_data.js"></script>
+<script>
+/* ===================== State ===================== */
+let currentSubject = null; // subject id
+let mode = null;           // 'immediate' | 'random'
+let quizQuestions = [];    // active question set for this run
+let currentIndex = 0;
+let score = 0;
+let answered = false;
+let userAnswers = [];      // {question, options, answerIndex, chosenIndex, correct}
+let selectedChapters = new Set();
+
+function historyKey(){ return 'combined_' + currentSubject + '_history_v1'; }
+function mistakesKey(){ return 'combined_' + currentSubject + '_mistakes_v1'; }
+const THEME_KEY = 'combined_quiz_theme_v1';
+
+/* Timer state */
+let timerEnabled = false;
+let timerSeconds = 30;
+let timerInterval = null;
+let timeLeft = 0;
+
+/* ===================== Theme ===================== */
+function applyTheme(theme){
+  document.body.setAttribute('data-theme', theme);
+  document.getElementById('theme-toggle').textContent = theme === 'dark' ? '☀️' : '🌙';
+}
+function toggleTheme(){
+  const cur = document.body.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+  const next = cur === 'dark' ? 'light' : 'dark';
+  applyTheme(next);
+  try{ localStorage.setItem(THEME_KEY, next); } catch(e){}
+}
+(function initTheme(){
+  let saved = 'light';
+  try{ saved = localStorage.getItem(THEME_KEY) || 'light'; } catch(e){}
+  applyTheme(saved);
+})();
+
+/* ===================== Mistakes tracking ===================== */
+function loadMistakes(){
+  try{
+    const raw = localStorage.getItem(mistakesKey());
+    return raw ? new Set(JSON.parse(raw)) : new Set();
+  } catch(e){ return new Set(); }
+}
+function saveMistakes(set){
+  try{ localStorage.setItem(mistakesKey(), JSON.stringify(Array.from(set))); } catch(e){}
+}
+function markMistake(id, wasCorrect){
+  const m = loadMistakes();
+  if(wasCorrect){ m.delete(id); } else { m.add(id); }
+  saveMistakes(m);
+}
+function renderReviewButton(){
+  const m = loadMistakes();
+  const btn = document.getElementById('review-btn');
+  if(m.size > 0){
+    btn.style.display = 'block';
+    document.getElementById('review-count').textContent = m.size;
+  } else {
+    btn.style.display = 'none';
+  }
+}
+function startReviewMistakes(){
+  const m = loadMistakes();
+  const pool = QUESTIONS.filter(q => q.subject === currentSubject && m.has(q.id));
+  if(pool.length === 0) return;
+  mode = 'immediate';
+  quizQuestions = shuffle(pool);
+  timerEnabled = false;
+  document.getElementById('timer-badge').style.display = 'none';
+  startQuiz();
+}
+
+/* ===================== Helpers ===================== */
+function shuffle(arr){
+  const a = arr.slice();
+  for(let i=a.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]] = [a[j],a[i]];
+  }
+  return a;
+}
+
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+function categoryCounts(){
+  const map = {};
+  QUESTIONS.filter(q => q.subject === currentSubject).forEach(q => { map[q.category] = (map[q.category]||0) + 1; });
+  return map;
+}
+
+function categoriesForSubject(subj){
+  const seen = [];
+  const set = new Set();
+  QUESTIONS.forEach(q => {
+    if(q.subject === subj && !set.has(q.category)){
+      set.add(q.category);
+      seen.push(q.category);
+    }
+  });
+  return seen;
+}
+
+function currentPool(){
+  return QUESTIONS.filter(q => q.subject === currentSubject && selectedChapters.has(q.category));
+}
+
+/* ===================== Subjects ===================== */
+function subjectCounts(){
+  const map = {};
+  QUESTIONS.forEach(q => { map[q.subject] = (map[q.subject]||0) + 1; });
+  return map;
+}
+
+function renderSubjectGrid(){
+  const grid = document.getElementById('subject-grid');
+  const counts = subjectCounts();
+  const nums = ['١','٢','٣','٤','٥','٦','٧','٨'];
+  grid.innerHTML = '';
+  SUBJECTS.forEach((s, i) => {
+    const card = document.createElement('div');
+    card.className = 'subject-card';
+    card.onclick = () => selectSubject(s.id);
+    card.innerHTML =
+      '<span class="subj-num">' + (nums[i]||(i+1)) + '</span>' +
+      '<span class="subj-text">' +
+        '<span class="subj-name">' + s.name + '</span>' +
+        '<span class="subj-sub">' + s.sub + '</span>' +
+        '<span class="subj-count">' + (counts[s.id]||0) + ' سؤال</span>' +
+      '</span>';
+    grid.appendChild(card);
+  });
+}
+
+function selectSubject(id){
+  currentSubject = id;
+  const s = SUBJECTS.find(x => x.id === id);
+  document.getElementById('subject-heading').textContent = 'اختر طريقة الاختبار';
+  document.getElementById('brand-title').textContent = s ? s.name : 'اختبار';
+  document.getElementById('brand-sub').textContent = s ? s.sub : '';
+  goHome();
+}
+
+function goSubjects(){
+  showScreen('screen-subjects');
+}
+
+/* ===================== Init ===================== */
+renderSubjectGrid();
+
+const chipCounts = [10, 20, 30, 50, 100];
+const chipRow = document.getElementById('chip-row');
+let selectedCount = 20;
+chipCounts.forEach(n => {
+  const btn = document.createElement('button');
+  btn.className = 'chip' + (n===selectedCount ? ' selected' : '');
+  btn.textContent = n + ' سؤال';
+  btn.onclick = () => {
+    selectedCount = n;
+    document.getElementById('custom-count').value = '';
+    document.querySelectorAll('#chip-row .chip').forEach(c=>c.classList.remove('selected'));
+    btn.classList.add('selected');
+  };
+  chipRow.appendChild(btn);
+});
+document.getElementById('custom-count').addEventListener('input', function(){
+  if(this.value){
+    document.querySelectorAll('#chip-row .chip').forEach(c=>c.classList.remove('selected'));
+    selectedCount = null;
+  }
+});
+
+function rebuildChapterList(){
+  const counts = categoryCounts();
+  const cats = categoriesForSubject(currentSubject);
+  const chapterList = document.getElementById('chapter-list');
+  chapterList.innerHTML = '';
+  selectedChapters = new Set(cats);
+  cats.forEach(cat => {
+    const label = document.createElement('label');
+    label.className = 'chapter-item';
+    const cb = document.createElement('input');
+    cb.type = 'checkbox';
+    cb.checked = true;
+    cb.value = cat;
+    cb.addEventListener('change', () => {
+      if(cb.checked) selectedChapters.add(cat); else selectedChapters.delete(cat);
+      updateFilteredCount();
+    });
+    const span = document.createElement('span');
+    span.textContent = cat;
+    const cnt = document.createElement('span');
+    cnt.className = 'cnt';
+    cnt.textContent = counts[cat] || 0;
+    label.appendChild(cb);
+    label.appendChild(span);
+    label.appendChild(cnt);
+    chapterList.appendChild(label);
+  });
+}
+
+function selectAllChapters(state){
+  const cats = categoriesForSubject(currentSubject);
+  selectedChapters = state ? new Set(cats) : new Set();
+  document.querySelectorAll('#chapter-list input').forEach(cb => cb.checked = state);
+  updateFilteredCount();
+}
+
+function updateFilteredCount(){
+  document.getElementById('filtered-count').textContent =
+    'عدد الأسئلة المتاحة ضمن الفصول المختارة: ' + currentPool().length;
+}
+
+/* ===================== Navigation ===================== */
+function goHome(){
+  showScreen('screen-home');
+  document.getElementById('total-count').textContent =
+    QUESTIONS.filter(q => q.subject === currentSubject).length;
+  renderHistory();
+  renderReviewButton();
+}
+
+function goSetup(m){
+  mode = m;
+  document.getElementById('setup-title').textContent =
+    m === 'immediate' ? 'إعداد اختبار التصحيح الفوري' : 'إعداد الاختبار العشوائي';
+  document.getElementById('count-row').style.display = (m === 'random') ? 'block' : 'none';
+  rebuildChapterList();
+  updateFilteredCount();
+  showScreen('screen-setup');
+}
+
+function confirmSetup(){
+  const pool = currentPool();
+  if(pool.length === 0){
+    alert('اختر فصلاً واحدًا على الأقل.');
+    return;
+  }
+  if(mode === 'immediate'){
+    quizQuestions = shuffle(pool);
+  } else {
+    const customVal = parseInt(document.getElementById('custom-count').value, 10);
+    let n = (customVal && customVal > 0) ? customVal : selectedCount;
+    n = Math.max(1, Math.min(n, pool.length));
+    quizQuestions = shuffle(pool).slice(0, n);
+  }
+  timerEnabled = document.getElementById('timer-toggle').checked;
+  timerSeconds = Math.max(5, parseInt(document.getElementById('timer-seconds').value, 10) || 30);
+  startQuiz();
+}
+
+function startQuiz(){
+  currentIndex = 0;
+  score = 0;
+  answered = false;
+  userAnswers = [];
+  document.getElementById('quiz-mode-label').textContent =
+    mode === 'immediate' ? 'وضع التصحيح الفوري' : 'وضع الاختبار العشوائي';
+  document.getElementById('timer-badge').style.display = timerEnabled ? 'inline-block' : 'none';
+  showScreen('screen-quiz');
+  renderQuestion();
+}
+
+/* ===================== History (localStorage) ===================== */
+function loadHistory(){
+  try{
+    const raw = localStorage.getItem(historyKey());
+    return raw ? JSON.parse(raw) : [];
+  } catch(e){ return []; }
+}
+function saveAttempt(entry){
+  try{
+    const hist = loadHistory();
+    hist.unshift(entry);
+    localStorage.setItem(historyKey(), JSON.stringify(hist.slice(0, 50)));
+  } catch(e){ /* ignore storage errors */ }
+}
+function clearHistory(){
+  try{ localStorage.removeItem(historyKey()); } catch(e){}
+  renderHistory();
+}
+function renderHistory(){
+  const box = document.getElementById('history-box');
+  const hist = loadHistory();
+  if(hist.length === 0){ box.style.display = 'none'; return; }
+  box.style.display = 'block';
+
+  const attempts = hist.length;
+  const best = Math.max(...hist.map(h => h.pct));
+  const avg = Math.round(hist.reduce((s,h)=>s+h.pct,0) / attempts);
+
+  let html = '<h4>سجل محاولاتك السابقة</h4>';
+  html += '<div class="history-stats">';
+  html += '<div class="hstat"><b>' + attempts + '</b><span>محاولة</span></div>';
+  html += '<div class="hstat"><b>' + best + '%</b><span>أفضل نتيجة</span></div>';
+  html += '<div class="hstat"><b>' + avg + '%</b><span>المعدل</span></div>';
+  html += '</div><div class="history-list">';
+  hist.slice(0,8).forEach(h => {
+    const modeLabel = h.mode === 'immediate' ? 'تصحيح فوري' : 'عشوائي';
+    html += '<div class="history-row"><span>' + h.date + ' — ' + modeLabel + ' (' + h.total + ' سؤال)</span><span class="h-pct">' + h.pct + '%</span></div>';
+  });
+  html += '</div><button class="clear-history" onclick="clearHistory()">مسح السجل</button>';
+  box.innerHTML = html;
+}
+/* ===================== Quiz rendering ===================== */
+function clearTimer(){
+  if(timerInterval){ clearInterval(timerInterval); timerInterval = null; }
+}
+
+function startTimer(){
+  clearTimer();
+  if(!timerEnabled) return;
+  timeLeft = timerSeconds;
+  const badge = document.getElementById('timer-badge');
+  badge.style.display = 'inline-block';
+  badge.classList.remove('low');
+  badge.textContent = timeLeft + 'ث';
+  timerInterval = setInterval(() => {
+    timeLeft--;
+    badge.textContent = timeLeft + 'ث';
+    if(timeLeft <= 5) badge.classList.add('low');
+    if(timeLeft <= 0){
+      clearTimer();
+      handleTimeout();
+    }
+  }, 1000);
+}
+
+function handleTimeout(){
+  if(answered) return;
+  selectAnswer(-1, null); // no selection = counted wrong
+}
+
+function renderQuestion(){
+  answered = false;
+  const q = quizQuestions[currentIndex];
+  document.getElementById('quiz-counter').textContent =
+    (currentIndex+1) + ' / ' + quizQuestions.length;
+  document.getElementById('progress-fill').style.width =
+    ((currentIndex) / quizQuestions.length * 100) + '%';
+  document.getElementById('q-text').textContent = q.question;
+
+  const letters = ['أ','ب','ج','د'];
+  const optsContainer = document.getElementById('options');
+  optsContainer.innerHTML = '';
+  q.options.forEach((opt, i) => {
+    const div = document.createElement('div');
+    div.className = 'opt';
+    div.innerHTML = '<span class="letter">' + letters[i] + '</span><span>' + opt + '</span>';
+    div.onclick = () => selectAnswer(i, div);
+    optsContainer.appendChild(div);
+  });
+
+  document.getElementById('feedback').className = 'feedback';
+  document.getElementById('feedback').textContent = '';
+  document.getElementById('next-btn').classList.remove('show');
+  startTimer();
+}
+
+function selectAnswer(i, el){
+  if(answered) return;
+  answered = true;
+  clearTimer();
+  const q = quizQuestions[currentIndex];
+  const correct = (i === q.answerIndex);
+  if(correct) score++;
+
+  markMistake(q.id, correct);
+
+  userAnswers.push({
+    question: q.question,
+    options: q.options,
+    answerIndex: q.answerIndex,
+    chosenIndex: i,
+    correct: correct
+  });
+
+  const optDivs = document.querySelectorAll('.opt');
+  optDivs.forEach((div, idx) => {
+    div.classList.add('disabled');
+    if(idx !== i) div.classList.add('dimmed');
+    if(mode === 'immediate'){
+      if(idx === q.answerIndex) div.classList.add('correct');
+      if(idx === i && idx !== q.answerIndex) div.classList.add('wrong');
+    }
+  });
+
+  if(mode === 'immediate'){
+    const fb = document.getElementById('feedback');
+    fb.classList.add('show');
+    const letters = ['أ','ب','ج','د'];
+    if(correct){
+      fb.classList.add('ok');
+      fb.textContent = 'إجابة صحيحة ✓';
+    } else if(i === -1){
+      fb.classList.add('no');
+      fb.textContent = 'انتهى الوقت ✗ — الإجابة الصحيحة: ' + letters[q.answerIndex] + ') ' + q.options[q.answerIndex];
+    } else {
+      fb.classList.add('no');
+      fb.textContent = 'إجابة خاطئة ✗ — الإجابة الصحيحة: ' + letters[q.answerIndex] + ') ' + q.options[q.answerIndex];
+    }
+  }
+
+  document.getElementById('next-btn').classList.add('show');
+  document.getElementById('progress-fill').style.width =
+    ((currentIndex+1) / quizQuestions.length * 100) + '%';
+}
+
+function nextQuestion(){
+  clearTimer();
+  if(currentIndex < quizQuestions.length - 1){
+    currentIndex++;
+    renderQuestion();
+  } else {
+    showResults();
+  }
+}
+
+/* ===================== Results ===================== */
+function showResults(){
+  clearTimer();
+  showScreen('screen-results');
+  const total = quizQuestions.length;
+  document.getElementById('score-big').textContent = score + ' / ' + total;
+  const pct = Math.round((score/total)*100);
+  const pctEl = document.getElementById('score-pct');
+  pctEl.textContent = pct + '%';
+  if(pct >= 80){ pctEl.style.background = '#EAF3EC'; pctEl.style.color = '#3D6B4F'; }
+  else if(pct >= 50){ pctEl.style.background = '#FBF1DC'; pctEl.style.color = '#8a6a1f'; }
+  else { pctEl.style.background = '#F7EAEA'; pctEl.style.color = '#A23B3B'; }
+
+  saveAttempt({
+    date: new Date().toLocaleDateString('ar-EG', {year:'numeric', month:'short', day:'numeric'}),
+    mode: mode,
+    total: total,
+    score: score,
+    pct: pct
+  });
+
+  const container = document.getElementById('review-container');
+  container.innerHTML = '';
+  const letters = ['أ','ب','ج','د'];
+  userAnswers.forEach((ua, idx) => {
+    const div = document.createElement('div');
+    div.className = 'review-item ' + (ua.correct ? 'ok' : 'no');
+    let html = '<div class="rq">' + (idx+1) + '. ' + ua.question + '</div>';
+    html += '<div class="ra">';
+    if(ua.correct){
+      html += '<span class="tag-ok">✓ إجابتك صحيحة:</span> ' + letters[ua.chosenIndex] + ') ' + ua.options[ua.chosenIndex];
+    } else {
+      const chosenText = ua.chosenIndex === -1 ? 'لم تُجب (انتهى الوقت)' : (letters[ua.chosenIndex] + ') ' + ua.options[ua.chosenIndex]);
+      html += '<span class="tag-no">✗ إجابتك:</span> ' + chosenText + '<br>';
+      html += '<span class="tag-ok">الصحيحة:</span> ' + letters[ua.answerIndex] + ') ' + ua.options[ua.answerIndex];
+    }
+    html += '</div>';
+    div.innerHTML = html;
+    container.appendChild(div);
+  });
+}
+
+/* ===================== Share ===================== */
+function shareResult(){
+  const total = quizQuestions.length;
+  const pct = Math.round((score/total)*100);
+  const text = 'أنجزت اختبار "الرحيق المختوم" وحصلت على ' + score + ' من ' + total +
+               ' (' + pct + '%). جرّب اختبار معرفتك بالسيرة النبوية!';
+  if(navigator.share){
+    navigator.share({ title: 'اختبار الرحيق المختوم', text: text }).catch(()=>{});
+  } else {
+    navigator.clipboard?.writeText(text).then(() => {
+      alert('تم نسخ نتيجتك، يمكنك لصقها لمشاركتها الآن.');
+    }).catch(() => {
+      alert(text);
+    });
+  }
+}
+</script>
+</body>
+</html>
