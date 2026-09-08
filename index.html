@@ -1288,15 +1288,16 @@ function selectAnswer(i, el){
     const fb = document.getElementById('feedback');
     fb.classList.add('show');
     const letters = ['أ','ب','ج','د'];
+    const idTag = ' (#' + q.id + ')';
     if(correct){
       fb.classList.add('ok');
-      fb.textContent = 'إجابة صحيحة ✓';
+      fb.textContent = 'إجابة صحيحة ✓' + idTag;
     } else if(i === -1){
       fb.classList.add('no');
-      fb.textContent = 'انتهى الوقت ✗ — الإجابة الصحيحة: ' + letters[q.answerIndex] + ') ' + q.options[q.answerIndex];
+      fb.textContent = 'انتهى الوقت ✗ — الإجابة الصحيحة: ' + letters[q.answerIndex] + ') ' + q.options[q.answerIndex] + idTag;
     } else {
       fb.classList.add('no');
-      fb.textContent = 'إجابة خاطئة ✗ — الإجابة الصحيحة: ' + letters[q.answerIndex] + ') ' + q.options[q.answerIndex];
+      fb.textContent = 'إجابة خاطئة ✗ — الإجابة الصحيحة: ' + letters[q.answerIndex] + ') ' + q.options[q.answerIndex] + idTag;
     }
   }
 
